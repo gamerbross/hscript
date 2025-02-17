@@ -117,12 +117,12 @@ class Interp {
 		binops.set("=",assign);
 		binops.set("...",function(e1,e2) return new #if (haxe_211 || haxe3) IntIterator #else IntIter #end(me.expr(e1),me.expr(e2)));
 		binops.set("is",function(e1,e2) return #if (haxe_ver >= 4.2) Std.isOfType #else Std.is #end (me.expr(e1), me.expr(e2)));
+		binops.set(#if cpp "??"+"=" #else "??=" #end, function(e1, e2) return me.exprAssignValue(e1, me.expr(e1) == null ? me.expr(e2) : me.expr(e1)));
 		assignOp("+=",function(v1:Dynamic,v2:Dynamic) return v1 + v2);
 		assignOp("-=",function(v1:Float,v2:Float) return v1 - v2);
 		assignOp("*=",function(v1:Float,v2:Float) return v1 * v2);
 		assignOp("/=",function(v1:Float,v2:Float) return v1 / v2);
 		assignOp("%=",function(v1:Float,v2:Float) return v1 % v2);
-		assignOp(#if cpp "??"+"=" #else "??=" #end,function(v1:Dynamic,v2:Dynamic) if ( v1 == null ) return v1 = v2 else return v1);
 		assignOp("&=",function(v1,v2) return v1 & v2);
 		assignOp("|=",function(v1,v2) return v1 | v2);
 		assignOp("^=",function(v1,v2) return v1 ^ v2);
@@ -136,7 +136,10 @@ class Interp {
 	}
 
 	function assign( e1 : Expr, e2 : Expr ) : Dynamic {
-		var v = expr(e2);
+		return exprAssignValue(e1, expr(e2));
+	}
+
+	function exprAssignValue( e1 : Expr, v : Dynamic ) : Dynamic {
 		switch( Tools.expr(e1) ) {
 		case EIdent(id):
 			var l = locals.get(id);
